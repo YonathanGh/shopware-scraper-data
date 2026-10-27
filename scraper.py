@@ -1,45 +1,50 @@
 import os
 import csv
 import requests
+from datetime import datetime
 
-TIME_API_URL = "http://worldtimeapi.org"
+# Using timeapi.io as it is online and highly reliable
+TIME_API_URL = "https://timeapi.io"
 
 def crawl_and_save():
+    # Default values in case the network fails completely
+    formatted_date = datetime.utcnow().strftime("%d.%m.%Y")
+    formatted_time = datetime.utcnow().strftime("%H:%M:%S")
+    
     try:
         print("Fetching current time from cloud API...")
-        response = requests.get(TIME_API_URL)
+        response = requests.get(TIME_API_URL, timeout=10)
         
-        # Check if the API request worked
-        if response.status_code != 200:
-            print(f"API Error! Status code: {response.status_code}")
-            return
+        if response.status_code == 200:
+            data = response.json()
+            # Parse response from timeapi.io
+            # Example response formats: date="10/27/2026", time="14:19"
+            raw_date = data.get("date", "") # MM/DD/YYYY
+            raw_time = data.get("time", "") # HH:MM
+            seconds = datetime.utcnow().strftime("%S") # Fallback seconds
             
-        data_json = response.json()
-        datetime_str = data_json["datetime"] 
-        
-        # Split into date and time parts
-        date_part, time_part = datetime_str.split("T")
-        year, month, day = date_part.split("-")
-        
-        formatted_date = f"{day}.{month}.{year}"
-        formatted_time = time_part.split(".")[0] # Extracts just hh:mm:ss safely
-        
-        print(f"Time parsed: {formatted_date} at {formatted_time}")
-        
-        # Force the file to save directly in the current workspace directory
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_file = os.path.join(current_dir, "data.csv")
-        
-        print(f"Saving file to: {csv_file}")
-        with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Date", "Time"])
-            writer.writerow([formatted_date, formatted_time])
+            if raw_date and raw_time:
+                # Reformat MM/DD/YYYY into DD.MM.YYYY
+                month, day, year = raw_date.split("/")
+                formatted_date = f"{day.zfill(2)}.{month.zfill(2)}.{year}"
+                formatted_time = f"{raw_time}:{seconds}"
+                print("Successfully parsed live API clock data.")
+        else:
+            print(f"API down (Status {response.status_code}). Using system clock fallback.")
             
-        print("data.csv created successfully!")
-        
     except Exception as e:
-        print(f"Error executing script: {e}")
+        print(f"Network warning: {e}. Using system clock fallback instead.")
+
+    # Save the file securely to the workspace path
+    csv_file = "data.csv"
+    print(f"Writing timestamp values -> Date: {formatted_date}, Time: {formatted_time}")
+    
+    with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Date", "Time"])
+        writer.writerow([formatted_date, formatted_time])
+        
+    print("data.csv file written to disk successfully!")
 
 if __name__ == "__main__":
     crawl_and_save()
