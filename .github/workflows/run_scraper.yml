@@ -2,16 +2,16 @@ name: Daily Web Scraper
 
 on:
   schedule:
-    # This runs every day at 12:00 AM UTC. (Adjust the numbers to change the schedule)
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows you to also trigger this manually anytime
+    # Runs automatically at the start of every hour (Change to your preferred cron schedule)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows you to manually click a button to test it instantly
 
 jobs:
   scrape-and-update:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # Gives GitHub permission to save the CSV back to your repo
+      contents: write # Crucial: Allows GitHub to write data.csv back to your repo
 
     steps:
     - name: Checkout repository code
@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
+        pip install requests
 
     - name: Run Scraper Script
       run: python scraper.py
@@ -35,4 +35,4 @@ jobs:
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "actions@github.com"
         git add data.csv
-        git diff-index --quiet HEAD || (git commit -m "Automated daily CSV update" && git push)
+        git diff-index --quiet HEAD || (git commit -m "Automated live time update" && git push)
