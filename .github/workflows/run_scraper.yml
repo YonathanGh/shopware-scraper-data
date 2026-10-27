@@ -2,9 +2,9 @@ name: Daily Web Scraper
 
 on:
   schedule:
-    # Runs automatically at the start of every hour (Change to your preferred cron schedule)
-    - cron: '0 * * * *'
-  workflow_dispatch: # Allows you to manually click a button to test it instantly
+    # This configures the script to run every 5 minutes (GitHub's maximum speed)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Keeps the manual "Run workflow" button active for instant testing
 
 jobs:
   scrape-and-update:
