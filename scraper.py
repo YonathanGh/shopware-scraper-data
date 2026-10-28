@@ -2,14 +2,18 @@ import os
 import csv
 import requests
 from datetime import datetime
+# We use a built-in library to shift time zones
+import zoneinfo 
 
-# Using timeapi.io as it is online and highly reliable
 TIME_API_URL = "https://timeapi.io"
 
 def crawl_and_save():
-    # Default values in case the network fails completely
-    formatted_date = datetime.utcnow().strftime("%d.%m.%Y")
-    formatted_time = datetime.utcnow().strftime("%H:%M:%S")
+    # Force the backup clock to use Germany's local time zone
+    berlin_tz = zoneinfo.ZoneInfo("Europe/Berlin")
+    now_in_germany = datetime.now(berlin_tz)
+    
+    formatted_date = now_in_germany.strftime("%d.%m.%Y")
+    formatted_time = now_in_germany.strftime("%H:%M:%S")
     
     try:
         print("Fetching current time from cloud API...")
@@ -17,18 +21,16 @@ def crawl_and_save():
         
         if response.status_code == 200:
             data = response.json()
-            # Parse response from timeapi.io
-            # Example response formats: date="10/27/2026", time="14:19"
             raw_date = data.get("date", "") # MM/DD/YYYY
             raw_time = data.get("time", "") # HH:MM
-            seconds = datetime.utcnow().strftime("%S") # Fallback seconds
+            seconds = now_in_germany.strftime("%S") 
             
             if raw_date and raw_time:
-                # Reformat MM/DD/YYYY into DD.MM.YYYY
                 month, day, year = raw_date.split("/")
                 formatted_date = f"{day.zfill(2)}.{month.zfill(2)}.{year}"
                 formatted_time = f"{raw_time}:{seconds}"
-                print("Successfully parsed live API clock data.")
+                print("Successfully parsed live German clock data.")
+
         else:
             print(f"API down (Status {response.status_code}). Using system clock fallback.")
             
